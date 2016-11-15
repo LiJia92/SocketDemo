@@ -9,11 +9,10 @@ import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -160,38 +159,46 @@ public class ServerSocketHelper {
     private static class MyServerRunnable implements Runnable {
         Socket socket = null;
         BufferedReader bufferedReader = null;
+        DataInputStream dataInputStream;
+        byte[] data = new byte[50 * 1024];
 
         MyServerRunnable(Socket socket) {
             this.socket = socket;
             Log.e("TAG", "client connected");
             try {
                 bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                dataInputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
         public void run() {
-            String content = null;
+            int position;
             try {
-                while (!mInstance.stop && ((content = bufferedReader.readLine()) != null)) {
-                    Log.e("TAG", "content:" + content);
+                while (!mInstance.stop && ((position = dataInputStream.read(data)) > -1)) {
+                    Log.e("TAG", "position:" + position);
                     for (Socket socket : socketList) {
                         try {
                             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                            if (content.equals("getTime")) {
+                            String msg = new String(data, 0, position, "UTF-8");
+                            if (msg.equals("getTime")) {
+                                Log.e("TAG", "getTime");
                                 writer.write("time:" + String.valueOf(SystemClock.elapsedRealtime()));
                                 writer.newLine();
                                 writer.flush();
                             } else {
-                                JSONObject root = new JSONObject(content);
-                                long time = root.getLong("time");
-                                byte[] data = root.getString("data").getBytes();
-                                if (mInstance.listener != null) {
-                                    mInstance.listener.onReceiveMessage(time, data);
-                                }
+//                                JSONObject root = new JSONObject(msg);
+//                                long time = root.getLong("time");
+//                                byte[] data = root.getString("data").getBytes();
+//                                if (mInstance.listener != null) {
+//                                    mInstance.listener.onReceiveMessage(time, data);
+//                                }
+                                byte[] realData = new byte[position];
+                                System.arraycopy(data, 0, realData, 0, position);
+                                mInstance.listener.onReceiveMessage(SystemClock.elapsedRealtime(), realData);
                             }
-                        } catch (IOException | JSONException e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }

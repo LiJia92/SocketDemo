@@ -3,7 +3,7 @@ package study.lastwarmth.me.socketdemo;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.os.Bundle;
-import android.os.SystemClock;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -28,6 +28,7 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
     private MediaCodec decoder;
     private final static int TIME_INTERNAL = 30;
     private List<byte[]> h264data = new LinkedList<>();
+    String path = Environment.getExternalStorageDirectory() + "/test_1280x720.h264";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,19 +65,19 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
     @Override
     public void onReceiveMessage(final long time, byte[] data) {
         h264data.add(data);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                long receiveTime = SystemClock.elapsedRealtime();
-                long delay = 0;
-                try {
-                    delay = receiveTime - time;
-                } catch (NumberFormatException e) {
-
-                }
-                log.append("时间：" + time + "--->" + receiveTime + ":" + delay + "\n");
-            }
-        });
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                long receiveTime = SystemClock.elapsedRealtime();
+//                long delay = 0;
+//                try {
+//                    delay = receiveTime - time;
+//                } catch (NumberFormatException e) {
+//
+//                }
+//                log.append("时间：" + time + "--->" + receiveTime + ":" + delay + "\n");
+//            }
+//        });
     }
 
     @Override
@@ -126,6 +127,8 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
                     if (h264data.size() > 0) {
                         byte[] data = h264data.get(0);
                         h264data.remove(0);
+//                        Log.e("Media", "save to file data size:" + data.length);
+//                        Util.save(data, 0, data.length, path, true);
                         ByteBuffer[] inputBuffers = decoder.getInputBuffers();
                         int inputBufferIndex = decoder.dequeueInputBuffer(100);
                         if (inputBufferIndex >= 0) {

@@ -12,8 +12,10 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -42,6 +44,8 @@ public class ClientSocketHelper {
     private BufferedWriter writer;
     private BufferedReader reader;
     private GetTimeListener listener;
+
+    private DataOutputStream dataOutputStream;
 
     public void setListener(GetTimeListener listener) {
         this.listener = listener;
@@ -131,6 +135,8 @@ public class ClientSocketHelper {
 //                    writer.flush();
                     reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+
+                    dataOutputStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -164,9 +170,11 @@ public class ClientSocketHelper {
             @Override
             public void run() {
                 try {
-                    writer.write(msg);
-                    writer.newLine();
-                    writer.flush();
+//                    writer.write(msg);
+//                    writer.newLine();
+//                    writer.flush();
+
+                    dataOutputStream.write(msg.getBytes("UTF-8"));
                     Log.e("TAG", "write done.");
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -186,8 +194,20 @@ public class ClientSocketHelper {
                     writer.write(root.toString());
                     writer.newLine();
                     writer.flush();
-                    Log.e("TAG", "write done.");
                 } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public void postMsg(final byte[] data) {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    dataOutputStream.write(data);
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }

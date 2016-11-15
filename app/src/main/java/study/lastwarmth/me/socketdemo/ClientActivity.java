@@ -18,6 +18,7 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.List;
@@ -78,7 +79,11 @@ public class ClientActivity extends AppCompatActivity implements View.OnClickLis
                 ClientSocketHelper.getInstance().sendIpBroadcast();
                 break;
             case R.id.time_align:
-                timeAlign();
+                try {
+                    timeAlign();
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
                 break;
             case R.id.start_preview:
                 startPreview();
@@ -112,10 +117,10 @@ public class ClientActivity extends AppCompatActivity implements View.OnClickLis
         }
     }
 
-    private void timeAlign() {
+    private void timeAlign() throws UnsupportedEncodingException {
         count++;
         sendTime = SystemClock.elapsedRealtime();
-        ClientSocketHelper.getInstance().postMsg("getTime");
+        ClientSocketHelper.getInstance().postMsg("getTime".getBytes("UTF-8"));
     }
 
     @Override
@@ -125,7 +130,11 @@ public class ClientActivity extends AppCompatActivity implements View.OnClickLis
         delta = Math.min(delta, (receiveTime - sendTime) / 2);
         Log.e("TAG", "delta:" + delta + " 2:" + (receiveTime - sendTime) / 2);
         if (count < 5) {
-            timeAlign();
+            try {
+                timeAlign();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -170,7 +179,7 @@ public class ClientActivity extends AppCompatActivity implements View.OnClickLis
                             System.arraycopy(outData, 0, frameData, mPpsSps.length, outData.length);
                             outData = frameData;
                         }
-                        ClientSocketHelper.getInstance().postMsg(getSendServerTime(), outData);
+                        ClientSocketHelper.getInstance().postMsg(outData);
 //                        Util.save(outData, 0, outData.length, path, true);
                         mMediaCodec.releaseOutputBuffer(outputBufferIndex, false);
                         outputBufferIndex = mMediaCodec.dequeueOutputBuffer(bufferInfo, 0);
@@ -278,7 +287,7 @@ public class ClientActivity extends AppCompatActivity implements View.OnClickLis
             parameters.setPreviewSize(width, height);
             parameters.setPreviewFpsRange(max[0], max[1]);
             mCamera.setParameters(parameters);
-            mCamera.autoFocus(null);
+//            mCamera.autoFocus(null);
             int displayRotation;
             displayRotation = (cameraRotationOffset - getDegree() + 360) % 360;
             mCamera.setDisplayOrientation(displayRotation);
