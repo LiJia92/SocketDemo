@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -320,6 +321,16 @@ public class ClientActivity extends AppCompatActivity implements View.OnClickLis
     public void surfaceDestroyed(SurfaceHolder holder) {
         stopPreview();
         destroyCamera();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        // 屏幕触摸事件
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            // 按下时自动对焦
+            mCamera.autoFocus(null);
+        }
+        return true;
     }
 
     public static void determineClosestSupportedResolution(Camera.Parameters parameters) {
