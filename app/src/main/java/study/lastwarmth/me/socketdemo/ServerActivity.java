@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -126,27 +127,25 @@ public class ServerActivity extends AppCompatActivity implements View.OnClickLis
                     if (h264data.size() > 0) {
                         byte[] data = h264data.get(0);
                         h264data.remove(0);
-                        Log.e("Media", "save to file data size:" + data.length);
-                        Util.save(data, 0, data.length, path, true);
+//                        Log.e("Media", "save to file data size:" + data.length);
+//                        Util.save(data, 0, data.length, path, true);
 
+                        ByteBuffer[] inputBuffers = decoder.getInputBuffers();
+                        int inputBufferIndex = decoder.dequeueInputBuffer(100);
+                        if (inputBufferIndex >= 0) {
+                            ByteBuffer inputBuffer = inputBuffers[inputBufferIndex];
+                            inputBuffer.clear();
+                            inputBuffer.put(data);
+                            decoder.queueInputBuffer(inputBufferIndex, 0, data.length, mCount * TIME_INTERNAL, 0);
+                        }
 
-
-//                        ByteBuffer[] inputBuffers = decoder.getInputBuffers();
-//                        int inputBufferIndex = decoder.dequeueInputBuffer(100);
-//                        if (inputBufferIndex >= 0) {
-//                            ByteBuffer inputBuffer = inputBuffers[inputBufferIndex];
-//                            inputBuffer.clear();
-//                            inputBuffer.put(data);
-//                            decoder.queueInputBuffer(inputBufferIndex, 0, data.length, mCount * TIME_INTERNAL, 0);
-//                        }
-//
-//                        // Get output buffer index
-//                        int outputBufferIndex = decoder.dequeueOutputBuffer(mBufferInfo, 100);
-//                        while (outputBufferIndex >= 0) {
-//                            Log.e("Media", "onFrame index:" + outputBufferIndex);
-//                            decoder.releaseOutputBuffer(outputBufferIndex, true);
-//                            outputBufferIndex = decoder.dequeueOutputBuffer(mBufferInfo, 0);
-//                        }
+                        // Get output buffer index
+                        int outputBufferIndex = decoder.dequeueOutputBuffer(mBufferInfo, 100);
+                        while (outputBufferIndex >= 0) {
+                            Log.e("Media", "onFrame index:" + outputBufferIndex);
+                            decoder.releaseOutputBuffer(outputBufferIndex, true);
+                            outputBufferIndex = decoder.dequeueOutputBuffer(mBufferInfo, 0);
+                        }
                     } else {
                         sleep(TIME_INTERNAL);
                     }

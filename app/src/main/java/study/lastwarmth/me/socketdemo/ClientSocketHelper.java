@@ -207,6 +207,7 @@ public class ClientSocketHelper {
             public void run() {
                 try {
                     dataOutputStream.write(data);
+                    dataOutputStream.flush();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
